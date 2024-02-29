@@ -15,5 +15,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Weather.CallCity(
+                this,
+                "Toulouse",
+                (weatherData) -> {
+                    TextView mainText = findViewById(R.id.main_text);
+                    if (mainText != null ) {
+                        mainText.setText(weatherData.cityInfo.name);
+                    }
+                },
+                (error) -> {
+                    Toast.makeText(this, "Error getting weather: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+        );
     }
 }
