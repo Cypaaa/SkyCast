@@ -24,11 +24,15 @@ public class Location {
     static android.location.Location LAST_KNOWN_LOCATION;
 
     // Request location permission if not given already
-    static public void RequestPermission(Context ctx, Activity activity) {
+    // return true if a request is sent
+    static public boolean RequestPermission(Context ctx, Activity activity) {
         if (ActivityCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(ctx, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(activity, new String[] {android.Manifest.permission.ACCESS_FINE_LOCATION}, Location.FINE_PERMISSION_CODE);
+            return true;
         }
+        return false;
     }
+
     static public String GetCityName(Context ctx, android.location.Location location) {
         Geocoder geocoder = new Geocoder(ctx, Locale.getDefault());
         List addresses = null;
@@ -49,8 +53,6 @@ public class Location {
     static public void GetLocation(Context ctx, Activity activity, Consumer<android.location.Location> callback) {
         FusedLocationProviderClient fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(ctx);
         Location.RequestPermission(ctx, activity);
-
-        Toast.makeText(ctx, "test ???", Toast.LENGTH_SHORT).show();
 
         // no need for Lint to check MissingPermission because it's already handled in an other function.
         // but Lint detects an error anyway because THIS function doesn't check directly by itself
