@@ -10,11 +10,15 @@ public class ForecastDay {
     public String dayShort;
     @SerializedName("day_long")
     public String dayLong;
+    @SerializedName("tmin")
     public int tmin;
+    @SerializedName("tmax")
     public int tmax;
+    @SerializedName("condition")
     public String condition;
     @SerializedName("condition_key")
     public String conditionKey;
+    @SerializedName("icon")
     public String icon;
     @SerializedName("icon_big")
     public String iconBig;

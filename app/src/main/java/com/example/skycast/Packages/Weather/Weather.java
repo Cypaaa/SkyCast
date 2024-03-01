@@ -74,7 +74,6 @@ public class Weather {
     }
 
     static private WeatherData StringToWeatherData(String httpResponse) {
-        Gson gson = new Gson();
-        return gson.fromJson(httpResponse, WeatherData.class);
+        return new Gson().fromJson(httpResponse, WeatherData.class);
     }
 }

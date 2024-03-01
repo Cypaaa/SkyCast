@@ -1,13 +1,18 @@
 <resources>
     <string name="app_name">SkyCast</string>
-    <string name="city_name">City name</string>
-    <string name="today">today</string>
-    <string name="celcius">ºC</string>
-    <string name="slash">/</string>
-    <string name="current_condition">current condition</string>
-    <string name="tmax">25</string>
-    <string name="tmin">15</string>
-    <string name="default_celcius">0</string>
-    <string name="wind_emoji">🍃</string>
-    <string name="drop_emoji">💧</string>
+    <string name="city_name">City</string>
+    <string name="temperature_format">%1$dº</string>
+    <string name="temperature_max_min_format">H:%1$s L:%2$s</string>
+    <string name="number_percentage_format">%1$d%%</string>
+    <string name="number_kmh_format">%1$d km/h</string>
+    <string name="rain">Rain</string>
+    <string name="mostly_cloudy">Mostly Cloudy</string>
+    <string name="fri_march_1_18_51">Fri March 1 | 18:51</string>
+    <string name="h_31_l_25">H:31 L:25</string>
+    <string name="_25">25º</string>
+    <string name="_80">80%</string>
+    <string name="wind_speed">Wind speed</string>
+    <string name="city">City</string>
+    <string name="today">Today</string>
+    <string name="_20">20</string>
 </resources>

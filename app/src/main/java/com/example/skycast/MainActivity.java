@@ -1,27 +1,38 @@
 package com.example.skycast;
 
+import androidx.activity.OnBackPressedCallback;
+import androidx.activity.OnBackPressedDispatcher;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Activity;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.skycast.Adapters.HourlyAdapter;
 import com.example.skycast.Packages.Coordinates.Coordinates;
 import com.example.skycast.Packages.Location.Location;
+import com.example.skycast.Packages.Weather.HourlyData;
 import com.example.skycast.Packages.Weather.Weather;
-import com.example.skycast.Packages.Weather.WeatherData;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-
-import pl.droidsonroids.gif.GifImageView;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
+
+    private RecyclerView.Adapter hourlyAdapter;
+    private RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +44,16 @@ public class MainActivity extends AppCompatActivity {
         } else {
             this.LoadUX(false);
         }
+
+        Activity self = this;
+        OnBackPressedDispatcher onBackPressedDispatcher = getOnBackPressedDispatcher();
+        onBackPressedDispatcher.addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                // Handle the back button press event here
+                RequestClose(self);
+            }
+        });
     }
 
     @Override
@@ -54,38 +75,94 @@ public class MainActivity extends AppCompatActivity {
             this.LoadLocation();
         }
 
+        ((ImageView)findViewById(R.id.settings)).setOnClickListener(l -> {
+            startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+        });
+
         Date currentDate = new Date();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("E dd/MM HH:mm", Locale.getDefault());
-        TextView date = findViewById(R.id.date);
-        date.setText(dateFormat.format(currentDate));
+        SimpleDateFormat dateFormat = new SimpleDateFormat("E MMMM dd '|' HH:mm", Locale.getDefault());
+        TextView date_time = findViewById(R.id.date_time);
+        date_time.setText(dateFormat.format(currentDate));
     }
 
     public void LoadLocation() {
         Location.GetLocation(this, this, location -> {
             String cityName = Location.GetCityName(this, location);
-            if (cityName != "") {
-                Weather.CallCoordinates(
-                        this,
-                        new Coordinates(location.getLatitude(), location.getLongitude()),
-                        (weatherData) -> {
-                            GifImageView gifImageView = findViewById(R.id.gifImageView);
-                            TextView city_name = findViewById(R.id.city_name);
-                            TextView degrees = findViewById(R.id.degrees);
-                            TextView condition = findViewById(R.id.condition);
-                            TextView tmax = findViewById(R.id.tmax);
-                            TextView tmin = findViewById(R.id.tmin);
-                            city_name.setText(cityName);
-                            degrees.setText(String.valueOf(weatherData.currentCondition.tmp));
-                            condition.setText(weatherData.currentCondition.condition);
-                            tmax.setText(String.valueOf(weatherData.fcstDay0.tmax));
-                            tmin.setText(String.valueOf(weatherData.fcstDay0.tmin));
-                            gifImageView.setImageResource(weatherData.currentCondition.getGeneralizedCondition());
-                        },
-                        (error) -> {
-                            Toast.makeText(this, "Error getting weather: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            Weather.CallCoordinates(
+                    this,
+                    new Coordinates(location.getLatitude(), location.getLongitude()),
+                    (weatherData) -> {
+                        TextView city_name = findViewById(R.id.city_name);
+                        TextView temperature = findViewById(R.id.temperature);
+                        TextView condition_name = findViewById(R.id.condition_name);
+                        ImageView condition_img = findViewById(R.id.condition_img);
+                        TextView tmax_min = findViewById(R.id.tmax_min);
+                        TextView wind_spd = findViewById(R.id.wind_speed);
+                        TextView humidity = findViewById(R.id.humidity);
+
+
+                        city_name.setText(cityName); // city names
+                        temperature.setText(getString( // temperature
+                                R.string.temperature_format,
+                                weatherData.currentCondition.tmp));
+                        tmax_min.setText(String.format( // temperature min and max
+                                getString(R.string.temperature_max_min_format),
+                                Integer.toString(weatherData.fcstDay0.tmax),
+                                Integer.toString(weatherData.fcstDay0.tmin)));
+                        condition_name.setText(weatherData.currentCondition.condition);
+                        switch (weatherData.currentCondition.getGeneralizedCondition()) {
+                            case 0:
+                                condition_img.setImageResource(R.drawable.sunny);
+                                break;
+                            case 1:
+                                condition_img.setImageResource(R.drawable.night);
+                                break;
+                            case 2:
+                                condition_img.setImageResource(R.drawable.rainy);
+                                break;
+                            case 3:
+                                condition_img.setImageResource(R.drawable.snowy);
+                                break;
+                            case 4:
+                                condition_img.setImageResource(R.drawable.storm);
+                                break;
+                            case 5:
+                                condition_img.setImageResource(R.drawable.cloudy);
+                                break;
+                            case 6:
+                                condition_img.setImageResource(R.drawable.cloudy_sunny);
+                                break;
+                            case 7:
+                                condition_img.setImageResource(R.drawable.cloudy_night);
+                                break;
                         }
-                );
-            }
+                        wind_spd.setText(getString(R.string.number_kmh_format, weatherData.currentCondition.wndSpd));
+                        humidity.setText(getString(R.string.number_percentage_format, weatherData.currentCondition.humidity));
+                        this.LoadRecyclerView(weatherData.fcstDay0.hourlyData);
+                    },
+                    (error) -> {
+                        Toast.makeText(this, "Error getting weather: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+            );
         });
+    }
+
+
+    public void LoadRecyclerView(Map<String, HourlyData> items) {
+        this.recyclerView = findViewById(R.id.forecast_hours);
+        this.recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        this.hourlyAdapter = new HourlyAdapter(items);
+        this.recyclerView.setAdapter(this.hourlyAdapter);
+    }
+
+    public void RequestClose(Activity activity) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setTitle("Exit app");
+        builder.setMessage("Are you sure you want to exit the app ? I have your IP, just so you know :).");
+
+        Activity self = this;
+        builder.setPositiveButton("exit", (dialog, which) -> self.finish());
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.create().show();
     }
 }
