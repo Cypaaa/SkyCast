@@ -20,10 +20,11 @@ public class FragmentHelper {
     public FragmentHelper(FragmentManager fragmentManager, int fragmentHolder) {
         this.FragmentManager = fragmentManager;
         this.FragmentHolder = fragmentHolder;
+        this.Fragments = new HashMap<>();
     }
 
-    public void Register(Fragment fragment) {
-        Fragments.putIfAbsent(fragment.getId(), fragment);
+    public void Register(Fragment fragment, int fragmentID) {
+        Fragments.putIfAbsent(fragmentID, fragment);
     }
 
     // replace a fragment by another one from its id if the fragment is registered in Fragments
@@ -31,6 +32,7 @@ public class FragmentHelper {
     public boolean Replace(int id) {
         Fragment fragment = this.Fragments.get(id);
         if (fragment != null) {
+            this.CurrentFragment = id;
             FragmentTransaction ft = this.FragmentManager.beginTransaction();
             ft.replace(this.FragmentHolder, fragment);
             ft.commit();
@@ -40,9 +42,9 @@ public class FragmentHelper {
     }
 
     // replace a fragment by another from itself and register this new fragment in Fragments
-    public void ReplaceFragment(Fragment fragment) {
-        this.CurrentFragment = fragment.getId();
-        this.Register(fragment);
+    public void ReplaceFragment(Fragment fragment, int fragmentID) {
+        this.CurrentFragment = fragmentID;
+        this.Register(fragment, fragmentID);
         FragmentTransaction ft = this.FragmentManager.beginTransaction();
         ft.replace(this.FragmentHolder, fragment);
         ft.commit();
