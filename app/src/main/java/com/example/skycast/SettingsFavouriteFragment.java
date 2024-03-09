@@ -2,11 +2,24 @@ package com.example.skycast;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.skycast.Adapters.HourlyAdapter;
+import com.example.skycast.Adapters.SimpleTextAdapter;
+import com.google.android.material.textfield.TextInputEditText;
+
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -53,12 +66,25 @@ public class SettingsFavouriteFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_settings_favourite, container, false);
+
+        Button add_button = view.findViewById(R.id.add_button);
+        add_button.setOnClickListener((e) -> {
+            TextInputEditText text_input = view.findViewById(R.id.text_input);
+            RecyclerView city_name_list = view.findViewById(R.id.city_name_list);
+
+            SimpleTextAdapter adapter = new SimpleTextAdapter(text_input.getText().toString());
+            city_name_list.setAdapter(adapter);
+            Toast.makeText(container.getContext(), "added but invisible", Toast.LENGTH_SHORT).show();
+        });
+
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_settings_favourite, container, false);
+        return view;
     }
 }

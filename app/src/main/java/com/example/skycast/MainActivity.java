@@ -201,8 +201,9 @@ public class MainActivity extends AppCompatActivity {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
         executorService.execute(() -> {
+            situationDatabase.getSituationDAO().addSituation(situation);
             handler.post(() ->  {
-                situationDatabase.getSituationDAO().addSituation(situation);
+                Toast.makeText(this, "City Added", Toast.LENGTH_SHORT).show();
             });
         });
     }
@@ -211,8 +212,8 @@ public class MainActivity extends AppCompatActivity {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Handler handler = new Handler(Looper.getMainLooper());
         executorService.execute(() -> {
+            Situation situation = situationDatabase.getSituationDAO().getSituation(id);
             handler.post(() ->  {
-                Situation situation = situationDatabase.getSituationDAO().getSituation(id);
                 callback.accept(situation);
             });
         });
