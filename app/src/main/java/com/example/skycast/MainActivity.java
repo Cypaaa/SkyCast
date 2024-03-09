@@ -7,11 +7,16 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,6 +24,8 @@ import android.widget.Toast;
 import com.example.skycast.Adapters.HourlyAdapter;
 import com.example.skycast.Packages.Coordinates.Coordinates;
 import com.example.skycast.Packages.Location.Location;
+import com.example.skycast.Packages.Room.Situation;
+import com.example.skycast.Packages.Room.SituationDatabase;
 import com.example.skycast.Packages.Weather.HourlyData;
 import com.example.skycast.Packages.Weather.Weather;
 
@@ -26,16 +33,31 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.function.Consumer;
 
 public class MainActivity extends AppCompatActivity {
 
     private RecyclerView.Adapter hourlyAdapter;
     private RecyclerView recyclerView;
+    private SituationDatabase situationDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        RoomDatabase.Callback dbCallback = new RoomDatabase.Callback() {
+            @Override
+            public void onCreate(@NonNull SupportSQLiteDatabase db) {
+                super.onCreate(db);
+            }
+        };
+
+        situationDatabase = Room.databaseBuilder(getApplicationContext(),
+                SituationDatabase.class,"SituationDB").addCallback(dbCallback).build();
 
         if (!Location.RequestPermission(this, this)) {
             this.LoadUX(true);
@@ -90,6 +112,17 @@ public class MainActivity extends AppCompatActivity {
                     this,
                     new Coordinates(location.getLatitude(), location.getLongitude()),
                     (weatherData) -> {
+                        Situation here = new Situation();
+                        here.CityName = cityName;
+                        here.ConditionName = weatherData.currentCondition.condition;
+                        here.MaxTemperature = weatherData.fcstDay0.tmax;
+                        here.MinTemperature = weatherData.fcstDay0.tmin;
+                        here.ConditionImg = weatherData.currentCondition.getGeneralizedCondition();
+                        here.Humidity = weatherData.currentCondition.humidity;
+                        here.WindSpeed = weatherData.currentCondition.wndSpd;
+
+                        addSituationInBackground(here);
+
                         TextView city_name = findViewById(R.id.city_name);
                         TextView temperature = findViewById(R.id.temperature);
                         TextView condition_name = findViewById(R.id.condition_name);
@@ -162,5 +195,26 @@ public class MainActivity extends AppCompatActivity {
         builder.setPositiveButton("exit", (dialog, which) -> self.finish());
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         builder.create().show();
+    }
+
+    public void addSituationInBackground(Situation situation) {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        Handler handler = new Handler(Looper.getMainLooper());
+        executorService.execute(() -> {
+            handler.post(() ->  {
+                situationDatabase.getSituationDAO().addSituation(situation);
+            });
+        });
+    }
+
+    public void getSituationInBackground(int id, Consumer<Situation> callback) {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        Handler handler = new Handler(Looper.getMainLooper());
+        executorService.execute(() -> {
+            handler.post(() ->  {
+                Situation situation = situationDatabase.getSituationDAO().getSituation(id);
+                callback.accept(situation);
+            });
+        });
     }
 }

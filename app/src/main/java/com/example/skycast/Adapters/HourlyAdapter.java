@@ -44,18 +44,6 @@ public class HourlyAdapter extends RecyclerView.Adapter<HourlyAdapter.viewHolder
         String key = (String)items.keySet().toArray()[position];
         HourlyData item = items.get(key);
         if (item != null) {
-            LocalTime now = LocalTime.now();
-            // we don't really care of the Locale.COUNTRY used to format the String
-            // I just didn't want to use US over default English.
-            int hour = now.getHour();
-            int minute = now.getMinute();
-            if (minute >= 45) {
-                hour++; // Round up if the minutes are 30 or more
-            }
-            String hourNow = String.format(Locale.ENGLISH, "%02dH00", hour);
-            if (Objects.equals(key, hourNow)) {
-                holder.itemView.requestFocus();
-            }
             holder.hour.setText(key);
             holder.tmp.setText(ctx.getString(
                     R.string.temperature_format,
