@@ -11,7 +11,7 @@ Liste des fonctionnalités implémentées : <br />
 [X] Utilisation de SQLite (via Room)<br />
 [X] Utilisation de Room <br />
 [ ] Utilisation de Firebase <br />
-[X] Nombre d'activités ou fragment supérieur ou égal à 3 <br />
+[X] Nombre d'activités ou fragment supérieur ou égal à 3 (plutot 2 fragments et 2 activity, ca fait 4 en tout)<br />
 [X] Gestion du bouton Back (message pour confirmer que l'on veut réellement quitter l'application) <br />
 [X] L'affichage d'une liste avec son adapter <br />
 [X] L'affichage d'une liste avec un custom adapter (avec gestion d’événement) <br />
